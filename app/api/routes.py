@@ -253,6 +253,80 @@ async def find_group_matches(
     }
 
 
+@router.post("/score-itinerary")
+async def score_itinerary(itinerary_id: int) -> dict:
+    """Score an existing itinerary and return detailed breakdown.
+    
+    Takes an itinerary ID and returns its sustainability score with 
+    detailed breakdown across all sustainability dimensions.
+    
+    Args:
+        itinerary_id: ID of the itinerary to score
+        
+    Returns:
+        Sustainability score and detailed breakdown with explanations
+    """
+    # Find the itinerary in cache
+    found_itinerary = None
+    for cached_itineraries in ITINERARY_CACHE.values():
+        for itinerary in cached_itineraries:
+            if itinerary.id == itinerary_id:
+                found_itinerary = itinerary
+                break
+        if found_itinerary:
+            break
+    
+    if not found_itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary not found")
+    
+    sustainability = found_itinerary.sustainability
+    breakdown = sustainability.breakdown
+    
+    return {
+        "status": "success",
+        "itinerary_id": itinerary_id,
+        "title": found_itinerary.title,
+        "total_score": sustainability.total_score,
+        "total_carbon_kg": sustainability.total_carbon_kg,
+        "breakdown": {
+            "transport_score": {
+                "value": breakdown.transport_score,
+                "weight": "30%",
+                "explanation": "Based on transport modes used (train/bus = high, flight = low)"
+            },
+            "accommodation_score": {
+                "value": breakdown.accommodation_score,
+                "weight": "20%",
+                "explanation": "Based on eco-friendliness of lodging choices"
+            },
+            "activity_score": {
+                "value": breakdown.activity_score,
+                "weight": "20%",
+                "explanation": "Based on environmental impact of activities"
+            },
+            "local_engagement_score": {
+                "value": breakdown.local_engagement_score,
+                "weight": "20%",
+                "explanation": "Based on support for local communities and businesses"
+            },
+            "overtourism_score": {
+                "value": breakdown.overtourism_score,
+                "weight": "10%",
+                "explanation": "Based on avoiding overcrowded destinations and seasons"
+            },
+        },
+        "explanation": sustainability.explanation,
+        "recommendations": [
+            "Consider extending your stay to reduce per-day carbon impact",
+            "Look for locally-owned restaurants and shops",
+            "Opt for walking tours when available",
+        ] if sustainability.total_score < 80 else [
+            "Great choices! This itinerary is highly sustainable",
+            "Consider sharing your experience to inspire others",
+        ],
+    }
+
+
 @router.post("/compare-itineraries")
 async def compare_itineraries(itinerary_ids: List[int]) -> dict:
     """Compare multiple itineraries side-by-side.
