@@ -1,0 +1,24 @@
+# Render.com deployment configuration for Smart Eco Tour Backend
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: smart-eco-tour-backend
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: PYTHON_VERSION
+        value: "3.11"
+    healthCheckPath: /api/health
+    autoDeploy: true
