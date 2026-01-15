@@ -11,7 +11,7 @@ from app.models.schemas import (
 from app.services.scoring import calculate_itinerary_sustainability
 from app.services.llm import (
     generate_prompt_for_itinerary,
-    call_openai_gpt,
+    call_gemini,
     parse_llm_itinerary,
     get_template_itinerary,
 )

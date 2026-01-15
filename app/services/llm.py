@@ -6,7 +6,7 @@ import json
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Hardcoded template itineraries for fallback
 TEMPLATE_ITINERARIES = {
@@ -192,8 +192,8 @@ Format the response as a structured itinerary with clear sections for each day."
     return prompt
 
 
-def call_openai_gpt(prompt: str) -> Optional[str]:
-    """Call OpenAI GPT API for itinerary generation.
+def call_groq(prompt: str) -> Optional[str]:
+    """Call Groq API for itinerary generation.
     
     Args:
         prompt: The prompt for itinerary generation
@@ -201,19 +201,23 @@ def call_openai_gpt(prompt: str) -> Optional[str]:
     Returns:
         Generated itinerary text or None if API unavailable
     """
-    if not OPENAI_API_KEY or OPENAI_API_KEY.startswith("your_"):
-        print("⚠️  OpenAI API key not configured. Using fallback template.")
+    if not GROQ_API_KEY or GROQ_API_KEY.startswith("your_"):
+        print("⚠️  Groq API key not configured. Using fallback template.")
         return None
     
     try:
-        import openai
-        openai.api_key = OPENAI_API_KEY
+        from openai import OpenAI
         
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        client = OpenAI(
+            api_key=GROQ_API_KEY,
+            base_url="https://api.groq.com/openai/v1",
+        )
+        
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are an expert sustainable travel consultant."},
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": prompt}
             ],
             temperature=0.7,
             max_tokens=2000,
@@ -224,8 +228,12 @@ def call_openai_gpt(prompt: str) -> Optional[str]:
         print("⚠️  openai package not installed. Using fallback template.")
         return None
     except Exception as e:
-        print(f"⚠️  OpenAI API call failed: {e}. Using fallback template.")
+        print(f"⚠️  Groq API call failed: {e}. Using fallback template.")
         return None
+
+
+# Keep call_gemini as alias for backward compatibility
+call_gemini = call_groq
 
 
 def get_template_itinerary(
