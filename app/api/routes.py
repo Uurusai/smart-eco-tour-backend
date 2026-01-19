@@ -65,8 +65,13 @@ async def generate_itinerary_endpoint(
             "origin": trip_input.origin,
             "destination": trip_input.destination,
             "days": trip_input.days,
+<<<<<<< HEAD
             "itineraries": serialized_itineraries,
             "message": f"Generated {len(serialized_itineraries)} sustainable itinerary options",
+=======
+            "itineraries": [it.model_dump(mode='json') for it in itineraries],
+            "message": f"Generated {len(itineraries)} sustainable itinerary options",
+>>>>>>> 4662c51 (fixed)
         }
     except Exception as e:
         print(f"❌ Error in generate_itinerary_endpoint: {e}")
@@ -123,7 +128,7 @@ async def create_traveler_profile(profile: TravelerProfile) -> dict:
             "status": "success",
             "traveler_id": profile.id,
             "message": f"Profile created for {profile.name}",
-            "profile": profile,
+            "profile": profile.model_dump(mode='json'),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -139,7 +144,7 @@ async def list_travelers() -> dict:
     return {
         "status": "success",
         "count": len(TRAVELER_DATABASE),
-        "travelers": list(TRAVELER_DATABASE.values()),
+        "travelers": [t.model_dump(mode='json') for t in TRAVELER_DATABASE.values()],
     }
 
 
@@ -252,11 +257,11 @@ async def find_group_matches(
                 "name": m[1].name,
                 "destination": m[1].destination,
                 "similarity_score": float(m[2]),
-                "common_interests": [i for i in traveler.interests if m[1].interests and i in m[1].interests],
+                "common_interests": [str(i.value) if hasattr(i, 'value') else str(i) for i in traveler.interests if m[1].interests and i in m[1].interests],
             }
             for m in matches[:5]
         ],
-        "group_recommendations": group_recommendations,
+        "group_recommendations": [gr.model_dump(mode='json') for gr in group_recommendations],
     }
 
 
@@ -360,7 +365,7 @@ async def compare_itineraries(itinerary_ids: List[int]) -> dict:
     comparison = {
         "status": "success",
         "count": len(itineraries),
-        "itineraries": itineraries,
+        "itineraries": [it.model_dump(mode='json') for it in itineraries],
         "comparison": {
             "by_score": sorted(
                 [

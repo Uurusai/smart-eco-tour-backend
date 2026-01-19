@@ -191,10 +191,25 @@ Format the response as a structured itinerary with clear sections for each day."
     
     return prompt
 
+<<<<<<< HEAD
 def call_groq(prompt: str) -> Optional[str]:
     """Call Groq API for itinerary generation using LangChain."""
     
     if not GROQ_API_KEY:
+=======
+
+def call_groq(prompt: str, timeout: int = 30) -> Optional[str]:
+    """Call Groq API for itinerary generation.
+    
+    Args:
+        prompt: The prompt for itinerary generation
+        timeout: Request timeout in seconds (default 30)
+        
+    Returns:
+        Generated itinerary text or None if API unavailable
+    """
+    if not GROQ_API_KEY or GROQ_API_KEY.startswith("your_"):
+>>>>>>> 4662c51 (fixed)
         print("⚠️  Groq API key not configured. Using fallback template.")
         return None
     
@@ -202,7 +217,20 @@ def call_groq(prompt: str) -> Optional[str]:
         # Initialize LangChain ChatGroq client
         llm = ChatGroq(
             api_key=GROQ_API_KEY,
+<<<<<<< HEAD
             model="openai/gpt-oss-20b",  # Using Llama 3.1 70B model
+=======
+            base_url="https://api.groq.com/openai/v1",
+            timeout=timeout,  # Add timeout to prevent hanging
+        )
+
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",  # Use a working Groq model
+            messages=[
+                {"role": "system", "content": "You are an expert sustainable travel consultant. Create detailed, eco-friendly travel itineraries that minimize environmental impact while maximizing authentic local experiences."},
+                {"role": "user", "content": prompt}
+            ],
+>>>>>>> 4662c51 (fixed)
             temperature=0.7,
             max_tokens=4096,
         )
