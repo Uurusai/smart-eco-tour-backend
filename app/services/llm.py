@@ -9,7 +9,6 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 load_dotenv()
 
-GROQ_API_KEY = "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"
 
 # Hardcoded template itineraries for fallback
 TEMPLATE_ITINERARIES = {
