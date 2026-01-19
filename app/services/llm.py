@@ -9,8 +9,6 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 load_dotenv()
 
-
-# Hardcoded template itineraries for fallback
 TEMPLATE_ITINERARIES = {
     "eco_focused": {
         "title": "Sustainable Explorer",
