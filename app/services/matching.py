@@ -278,6 +278,7 @@ def generate_itinerary(
                 interests=[str(i.value) if hasattr(i, 'value') else str(i) for i in interests],
             )
             llm_response = call_gemini(prompt)
+            print(llm_response)
             if llm_response:
                 llm_itinerary = parse_llm_itinerary(llm_response)
                 print(f"✅ LLM generated itinerary for {destination}")
@@ -339,6 +340,8 @@ def generate_multiple_itineraries(
     interests: List[ActivityType] = None,
     count: int = 3,
 ) -> List[Itinerary]:
+    
+    print("Entering generate_multiple_itineraries function")
     """Generate multiple itinerary options.
     
     Args:

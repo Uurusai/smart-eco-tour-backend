@@ -4,9 +4,12 @@ from typing import Optional
 from dotenv import load_dotenv
 import json
 
+from langchain_groq import ChatGroq
+from langchain_core.messages import SystemMessage, HumanMessage
+
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = "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"
 
 # Hardcoded template itineraries for fallback
 TEMPLATE_ITINERARIES = {
@@ -191,47 +194,36 @@ Format the response as a structured itinerary with clear sections for each day."
     
     return prompt
 
-
 def call_groq(prompt: str) -> Optional[str]:
-    """Call Groq API for itinerary generation.
+    """Call Groq API for itinerary generation using LangChain."""
     
-    Args:
-        prompt: The prompt for itinerary generation
-        
-    Returns:
-        Generated itinerary text or None if API unavailable
-    """
-    if not GROQ_API_KEY or GROQ_API_KEY.startswith("your_"):
+    if not GROQ_API_KEY:
         print("⚠️  Groq API key not configured. Using fallback template.")
         return None
     
     try:
-        from openai import OpenAI
-        
-        client = OpenAI(
+        # Initialize LangChain ChatGroq client
+        llm = ChatGroq(
             api_key=GROQ_API_KEY,
-            base_url="https://api.groq.com/openai/v1",
-        )
-
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
-            messages=[
-                {"role": "system", "content": "You are an expert sustainable travel consultant. Create detailed, eco-friendly travel itineraries that minimize environmental impact while maximizing authentic local experiences."},
-                {"role": "user", "content": prompt}
-            ],
+            model="openai/gpt-oss-20b",  # Using Llama 3.1 70B model
             temperature=0.7,
-            max_tokens=2000,
+            max_tokens=4096,
         )
         
-        return response.choices[0].message.content
-    except ImportError:
-        print("⚠️  openai package not installed. Using fallback template.")
-        return None
+        # Create messages
+        messages = [
+            SystemMessage(content="You are an expert sustainable travel consultant. Create detailed, eco-friendly travel itineraries."),
+            HumanMessage(content=prompt)
+        ]
+        
+        # Invoke the model
+        response = llm.invoke(messages)
+        
+        return response.content
+
     except Exception as e:
         print(f"⚠️  Groq API call failed: {e}. Using fallback template.")
         return None
-
-
 # Keep call_gemini as alias for backward compatibility
 call_gemini = call_groq
 

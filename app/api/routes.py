@@ -41,6 +41,7 @@ async def generate_itinerary_endpoint(
         Multiple itinerary options with sustainability scores
     """
     try:
+        print("Entered generate_itinerary_endpoint")
         itineraries = generate_multiple_itineraries(
             origin=trip_input.origin,
             destination=trip_input.destination,
@@ -54,15 +55,21 @@ async def generate_itinerary_endpoint(
         cache_key = f"{trip_input.origin}_{trip_input.destination}_{trip_input.days}"
         ITINERARY_CACHE[cache_key] = itineraries
         
+        # Serialize itineraries to dicts for proper JSON response
+        serialized_itineraries = [itinerary.model_dump(mode='json') for itinerary in itineraries]
+        
+        print(f"✅ Returning {len(serialized_itineraries)} itineraries to frontend")
+        
         return {
             "status": "success",
             "origin": trip_input.origin,
             "destination": trip_input.destination,
             "days": trip_input.days,
-            "itineraries": itineraries,
-            "message": f"Generated {len(itineraries)} sustainable itinerary options",
+            "itineraries": serialized_itineraries,
+            "message": f"Generated {len(serialized_itineraries)} sustainable itinerary options",
         }
     except Exception as e:
+        print(f"❌ Error in generate_itinerary_endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -82,7 +89,7 @@ async def get_itinerary_details(itinerary_id: int) -> dict:
             if itinerary.id == itinerary_id:
                 return {
                     "status": "success",
-                    "itinerary": itinerary,
+                    "itinerary": itinerary.model_dump(mode='json'),
                 }
     
     raise HTTPException(status_code=404, detail="Itinerary not found")
