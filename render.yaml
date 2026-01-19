@@ -19,6 +19,6 @@ services:
       - key: GEMINI_API_KEY
         sync: false  # Set manually in Render dashboard
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.4"
     healthCheckPath: /api/health
     autoDeploy: true
