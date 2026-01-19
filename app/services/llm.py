@@ -212,11 +212,11 @@ def call_groq(prompt: str) -> Optional[str]:
             api_key=GROQ_API_KEY,
             base_url="https://api.groq.com/openai/v1",
         )
-        
+
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=[
-                {"role": "system", "content": "You are an expert sustainable travel consultant."},
+                {"role": "system", "content": "You are an expert sustainable travel consultant. Create detailed, eco-friendly travel itineraries that minimize environmental impact while maximizing authentic local experiences."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,

@@ -238,7 +238,7 @@ def generate_itinerary(
     transport_preference: TransportMode,
     interests: List[ActivityType] = None,
     sustainability_weights: Dict[str, float] = None,
-    use_llm: bool = False,
+    use_llm: bool = True,
 ) -> Itinerary:
     """Generate complete itinerary.
     
@@ -264,6 +264,25 @@ def generate_itinerary(
             "culture": 0.2,
             "overtourism": 0.1,
         }
+    
+    # Try LLM-powered generation first
+    llm_itinerary = None
+    if use_llm:
+        try:
+            prompt = generate_prompt_for_itinerary(
+                origin=origin,
+                destination=destination,
+                days=days,
+                transport_preference=str(transport_preference.value) if hasattr(transport_preference, 'value') else str(transport_preference),
+                sustainability_weights=sustainability_weights,
+                interests=[str(i.value) if hasattr(i, 'value') else str(i) for i in interests],
+            )
+            llm_response = call_gemini(prompt)
+            if llm_response:
+                llm_itinerary = parse_llm_itinerary(llm_response)
+                print(f"✅ LLM generated itinerary for {destination}")
+        except Exception as e:
+            print(f"⚠️ LLM generation failed: {e}, falling back to template")
     
     # Estimate distance
     distance = estimate_distance(origin, destination)
@@ -294,10 +313,18 @@ def generate_itinerary(
         total_distance_km=distance,
     )
     
+    # Use LLM-enhanced title and description if available
+    title = f"Sustainable {days}-Day {destination} Adventure"
+    description = f"Eco-conscious itinerary from {origin} to {destination}"
+    
+    if llm_itinerary and not llm_itinerary.get("fallback"):
+        title = llm_itinerary.get("title", title)
+        description = llm_itinerary.get("description", description)
+    
     return Itinerary(
         id=random.randint(1, 10000),
-        title=f"Sustainable {days}-Day {destination} Adventure",
-        description=f"Eco-conscious itinerary from {origin} to {destination}",
+        title=title,
+        description=description,
         days=day_plans,
         sustainability=sustainability,
         preferred_transport=transport_preference,
