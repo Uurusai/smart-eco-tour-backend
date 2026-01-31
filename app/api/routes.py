@@ -41,7 +41,7 @@ async def generate_itinerary_endpoint(
         Multiple itinerary options with sustainability scores
     """
     try:
-        print("Entered generate_itinerary_endpoint")
+        print(f"🚀 Entered generate_itinerary_endpoint: {trip_input.origin} -> {trip_input.destination}")
         itineraries = generate_multiple_itineraries(
             origin=trip_input.origin,
             destination=trip_input.destination,
@@ -56,6 +56,7 @@ async def generate_itinerary_endpoint(
         ITINERARY_CACHE[cache_key] = itineraries
         
         # Serialize itineraries to dicts for proper JSON response
+        print(f"📦 Serializing {len(itineraries)} itineraries...")
         serialized_itineraries = [itinerary.model_dump(mode='json') for itinerary in itineraries]
         
         print(f"✅ Returning {len(serialized_itineraries)} itineraries to frontend")
@@ -65,16 +66,13 @@ async def generate_itinerary_endpoint(
             "origin": trip_input.origin,
             "destination": trip_input.destination,
             "days": trip_input.days,
-<<<<<<< HEAD
             "itineraries": serialized_itineraries,
-            "message": f"Generated {len(serialized_itineraries)} sustainable itinerary options",
-=======
-            "itineraries": [it.model_dump(mode='json') for it in itineraries],
             "message": f"Generated {len(itineraries)} sustainable itinerary options",
->>>>>>> 4662c51 (fixed)
         }
     except Exception as e:
+        import traceback
         print(f"❌ Error in generate_itinerary_endpoint: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

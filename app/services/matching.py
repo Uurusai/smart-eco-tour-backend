@@ -278,17 +278,20 @@ def generate_itinerary(
                 interests=[str(i.value) if hasattr(i, 'value') else str(i) for i in interests],
             )
             llm_response = call_gemini(prompt)
-            print(llm_response)
+            # Don't print the full response - it can be huge and slow down output
             if llm_response:
                 llm_itinerary = parse_llm_itinerary(llm_response)
                 print(f"✅ LLM generated itinerary for {destination}")
         except Exception as e:
             print(f"⚠️ LLM generation failed: {e}, falling back to template")
     
+    print(f"📍 Step 1: Estimating distance...")
     # Estimate distance
     distance = estimate_distance(origin, destination)
+    print(f"📍 Step 2: Distance = {distance} km")
     sustainability_score = min(100.0, (1 - (distance / 10000)) * 100)  # Penalize long distances
     
+    print(f"📍 Step 3: Selecting activities...")
     # Generate activities
     activities = select_activities(
         destination,
@@ -296,15 +299,19 @@ def generate_itinerary(
         interests,
         sustainability_score / 100,
     )
+    print(f"📍 Step 4: Selected {len(activities)} activities")
     
     # Generate day plans
+    print(f"📍 Step 5: Generating day plans...")
     day_plans = []
     for day in range(1, days + 1):
         day_plan = generate_day_plan(day, destination, activities)
         day_plans.append(day_plan)
+    print(f"📍 Step 6: Generated {len(day_plans)} day plans")
     
     # Calculate sustainability
     accommodation = "eco_hotel" if sustainability_score > 70 else "hotel"
+    print(f"📍 Step 7: Calculating sustainability...")
     sustainability = calculate_itinerary_sustainability(
         destination=destination,
         days=days,
@@ -313,6 +320,7 @@ def generate_itinerary(
         accommodation=accommodation,
         total_distance_km=distance,
     )
+    print(f"📍 Step 8: Sustainability calculated")
     
     # Use LLM-enhanced title and description if available
     title = f"Sustainable {days}-Day {destination} Adventure"
@@ -322,6 +330,7 @@ def generate_itinerary(
         title = llm_itinerary.get("title", title)
         description = llm_itinerary.get("description", description)
     
+    print(f"📍 Step 9: Creating Itinerary object...")
     return Itinerary(
         id=random.randint(1, 10000),
         title=title,
@@ -340,8 +349,6 @@ def generate_multiple_itineraries(
     interests: List[ActivityType] = None,
     count: int = 3,
 ) -> List[Itinerary]:
-    
-    print("Entering generate_multiple_itineraries function")
     """Generate multiple itinerary options.
     
     Args:
@@ -355,17 +362,25 @@ def generate_multiple_itineraries(
     Returns:
         List of itineraries
     """
+    print("Entering generate_multiple_itineraries function")
+    
     itineraries = []
     
+    # Only use LLM for the first itinerary, use templates for the rest (faster)
     for i in range(count):
+        use_llm = (i == 0)  # Only first itinerary uses LLM
+        print(f"Generating itinerary {i+1}/{count} (use_llm={use_llm})")
+        
         itinerary = generate_itinerary(
             origin=origin,
             destination=destination,
             days=days,
             transport_preference=transport_preference,
             interests=interests,
+            use_llm=use_llm,
         )
         itineraries.append(itinerary)
+        print(f"✅ Itinerary {i+1} generated successfully")
     
     # Sort by sustainability score (descending)
     itineraries.sort(
@@ -373,4 +388,5 @@ def generate_multiple_itineraries(
         reverse=True,
     )
     
+    print(f"✅ All {len(itineraries)} itineraries generated and sorted")
     return itineraries
